@@ -2,11 +2,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
-from models import PortResult, ScanRequest
+from models import PortResult, ScanRequest, AnalyzeResult, AnalyzeRequest
 from tools.PortScanner import PortScanner
+from tools.Wappalyzer import Wappalyzer
 
 app = FastAPI()
 scanner = PortScanner()
+analyzer = Wappalyzer()
 
 # Configure CORS
 app.add_middleware(
@@ -33,6 +35,14 @@ def scan(request: ScanRequest):
     except ValueError:
         raise HTTPException(
             status_code=400, detail="Protocol inválido; use 'tcp' ou 'udp'.")
+
+
+@app.post("/analyze", response_model=AnalyzeResult)
+def analyze(request: AnalyzeRequest):
+    try:
+        return analyzer.analyze(request.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 if __name__ == "__main__":

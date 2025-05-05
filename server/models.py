@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, HttpUrl
+from typing import Optional, List
 
 
 class ScanRequest(BaseModel):
@@ -23,3 +23,17 @@ class PortResult(BaseModel):
     banner: Optional[str] = None
     error_code: Optional[int] = None
     error_message: Optional[str] = None
+
+
+class AnalyzeRequest(BaseModel):
+    url: HttpUrl
+
+
+class Technology(BaseModel):
+    name: str
+    category: str
+
+
+class AnalyzeResult(BaseModel):
+    url: HttpUrl
+    technologies: List[Technology]
