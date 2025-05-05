@@ -119,9 +119,15 @@ npm install
 cd server
 uvicorn main:app --reload
 ```
+O backend estará disponível em: http://localhost:8000
 
 2. Em outro terminal, inicie o frontend:
 ```bash
 cd client
 npm run dev
 ```
+O frontend estará disponível em: http://localhost:5173
+
+### Acessando a Aplicação
+Após iniciar tanto o backend quanto o frontend, você pode acessar a interface web através do navegador em:
+http://localhost:5173
