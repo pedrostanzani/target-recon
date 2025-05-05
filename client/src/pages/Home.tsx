@@ -8,6 +8,12 @@ const tools = [
     title: "Port Scanner",
     description: "Scan ports on a target host or network to discover open services and gather information about running services.",
     path: "/port-scanner"
+  },
+  {
+    id: "wappalyzer",
+    title: "Wappalyzer",
+    description: "Analyze websites to detect technologies, frameworks, and services used in their stack.",
+    path: "/wappalyzer"
   }
 ];
 
