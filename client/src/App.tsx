@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectTrigger,
@@ -11,6 +13,14 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 // Define interface matching backend response
 interface PortResult {
@@ -25,18 +35,43 @@ interface PortResult {
   error_message?: string;
 }
 
+// Define the form schema with Zod
+const formSchema = z.object({
+  target: z.string().min(1, "Target is required"),
+  startPort: z.string().min(1).refine((val) => !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 65535, {
+    message: "Start port must be a number between 1 and 65535",
+  }),
+  endPort: z.string().min(1).refine((val) => !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 65535, {
+    message: "End port must be a number between 1 and 65535",
+  }),
+  protocol: z.enum(["tcp", "udp"]),
+  printClosed: z.boolean(),
+  printFiltered: z.boolean(),
+}).refine((data) => Number(data.startPort) <= Number(data.endPort), {
+  message: "Start port must be less than or equal to end port",
+  path: ["endPort"],
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 function App() {
-  const [target, setTarget] = useState('');
-  const [startPort, setStartPort] = useState<number>(3000);
-  const [endPort, setEndPort] = useState<number>(8000);
-  const [protocol, setProtocol] = useState<'tcp' | 'udp'>('tcp');
-  const [printClosed, setPrintClosed] = useState<boolean>(false);
-  const [printFiltered, setPrintFiltered] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [results, setResults] = useState<PortResult[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const handleScan = async () => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      target: "",
+      startPort: "3000",
+      endPort: "8000",
+      protocol: "tcp",
+      printClosed: false,
+      printFiltered: false,
+    },
+  });
+
+  const onSubmit = async (values: FormValues) => {
     setLoading(true);
     setError(null);
     setResults([]);
@@ -45,12 +80,12 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          target,
-          start_port: startPort,
-          end_port: endPort,
-          protocol,
-          print_closed: printClosed,
-          print_filtered: printFiltered,
+          target: values.target,
+          start_port: Number(values.startPort),
+          end_port: Number(values.endPort),
+          protocol: values.protocol,
+          print_closed: values.printClosed,
+          print_filtered: values.printFiltered,
         }),
       });
       if (!response.ok) {
@@ -70,85 +105,138 @@ function App() {
     <div className="p-8 space-y-8">
       <Card className="max-w-lg mx-auto">
         <CardContent>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <Label htmlFor="target" className="mb-2 block">Target</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="target"
-                  placeholder="e.g. 192.168.1.1 or 192.168.1.0/24"
-                  value={target}
-                  onChange={(e) => setTarget(e.currentTarget.value)}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="target"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Target</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. 192.168.1.1 or 192.168.1.0/24"
+                          {...field}
+                        />
+                      </FormControl>
+                      <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => form.setValue("target", "127.0.0.1")}
+                      >
+                        localhost
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startPort"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Port</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => setTarget('127.0.0.1')}
-                  type="button"
-                >
-                  localhost
-                </Button>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="startPort" className="mb-2 block">Start Port</Label>
-                <Input
-                  id="startPort"
-                  type="number"
-                  value={startPort}
-                  onChange={(e) => setStartPort(Number(e.currentTarget.value))}
+
+                <FormField
+                  control={form.control}
+                  name="endPort"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Port</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div>
-                <Label htmlFor="endPort" className="mb-2 block">End Port</Label>
-                <Input
-                  id="endPort"
-                  type="number"
-                  value={endPort}
-                  onChange={(e) => setEndPort(Number(e.currentTarget.value))}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="protocol" className="mb-2 block">Protocol</Label>
-              <Select
-                value={protocol}
-                onValueChange={(value) => setProtocol(value as 'tcp' | 'udp')}
+
+              <FormField
+                control={form.control}
+                name="protocol"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Protocol</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select protocol" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="tcp">TCP</SelectItem>
+                        <SelectItem value="udp">UDP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="printClosed"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Show closed</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="printFiltered"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Show filtered</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                disabled={loading}
               >
-                <SelectTrigger id="protocol">
-                  <SelectValue placeholder="Select protocol" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tcp">TCP</SelectItem>
-                  <SelectItem value="udp">UDP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="printClosed"
-                checked={printClosed}
-                onCheckedChange={(checked) => setPrintClosed(!!checked)}
-              />
-              <Label htmlFor="printClosed">Show closed</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="printFiltered"
-                checked={printFiltered}
-                onCheckedChange={(checked) => setPrintFiltered(!!checked)}
-              />
-              <Label htmlFor="printFiltered">Show filtered</Label>
-            </div>
-            <Button
-              variant="default"
-              onClick={handleScan}
-              disabled={loading}
-            >
-              {loading ? 'Scanning...' : 'Start Scan'}
-            </Button>
-            {error && <p className="text-red-600">Error: {error}</p>}
-          </div>
+                {loading ? 'Scanning...' : 'Start Scan'}
+              </Button>
+              {error && <p className="text-red-600">Error: {error}</p>}
+            </form>
+          </Form>
         </CardContent>
       </Card>
 
