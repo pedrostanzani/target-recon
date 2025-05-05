@@ -14,6 +14,12 @@ const tools = [
     title: "Wappalyzer",
     description: "Analyze websites to detect technologies, frameworks, and services used in their stack.",
     path: "/wappalyzer"
+  },
+  {
+    id: "whois",
+    title: "WHOIS Lookup",
+    description: "Look up domain registration information including registrar, creation date, expiration date, and contact details.",
+    path: "/whois"
   }
 ];
 

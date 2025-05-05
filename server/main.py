@@ -2,14 +2,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
-from models import PortResult, ScanRequest, AnalyzeResult, AnalyzeRequest
+from models import PortResult, ScanRequest, AnalyzeResult, AnalyzeRequest, WhoisRequest, WhoisRecord
 from tools.PortScanner import PortScanner
 from tools.Wappalyzer import Wappalyzer
+from tools.WHOIS import WhoisTool
 
 app = FastAPI()
 scanner = PortScanner()
 analyzer = Wappalyzer()
-
+whois_tool = WhoisTool()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -43,6 +44,22 @@ def analyze(request: AnalyzeRequest):
         return analyzer.analyze(request.url)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/whois", response_model=WhoisRecord)
+def whois_lookup(request: WhoisRequest):
+    """
+    WHOIS lookup endpoint.
+    Client sends {"domain": "example.com"} and receives registrant info.
+    """
+    try:
+        return whois_tool.lookup(request.domain)
+    except ValueError as e:
+        # lookup failure (invalid domain, network issue, etc.)
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # unexpected errors
+        raise HTTPException(status_code=500, detail="Internal WHOIS error")
 
 
 if __name__ == "__main__":

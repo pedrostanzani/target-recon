@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { PortScanner } from './pages/PortScanner';
 import { Wappalyzer } from './pages/Wappalyzer';
+import { Whois } from './pages/Whois';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/port-scanner" element={<PortScanner />} />
             <Route path="/wappalyzer" element={<Wappalyzer />} />
+            <Route path="/whois" element={<Whois />} />
           </Routes>
         </main>
       </div>

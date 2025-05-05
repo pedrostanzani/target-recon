@@ -1,5 +1,6 @@
+from datetime import datetime
 from pydantic import BaseModel, HttpUrl
-from typing import Optional, List
+from typing import Optional, List, Union
 
 
 class ScanRequest(BaseModel):
@@ -37,3 +38,29 @@ class Technology(BaseModel):
 class AnalyzeResult(BaseModel):
     url: HttpUrl
     technologies: List[Technology]
+
+
+class WhoisRequest(BaseModel):
+    domain: str
+
+
+class WhoisRecord(BaseModel):
+    domain_name: Optional[Union[str, List[str]]]
+    registrar: Optional[str]
+    whois_server: Optional[str]
+    referral_url: Optional[str]
+    updated_date: Optional[Union[datetime, List[datetime]]]
+    creation_date: Optional[Union[datetime, List[datetime]]]
+    expiration_date: Optional[Union[datetime, List[datetime]]]
+    name_servers: Optional[List[str]]
+    status: Optional[Union[str, List[str]]]
+    emails: Optional[List[str]]
+    dnssec: Optional[str]
+    # contact / registrant fields
+    name: Optional[str]
+    org: Optional[str]
+    address: Optional[str]
+    city: Optional[str]
+    state: Optional[str]
+    zipcode: Optional[str]
+    country: Optional[str]
