@@ -20,6 +20,12 @@ const tools = [
     title: "WHOIS Lookup",
     description: "Look up domain registration information including registrar, creation date, expiration date, and contact details.",
     path: "/whois"
+  },
+  {
+    id: "dns",
+    title: "DNS Lookup",
+    description: "Query DNS records including A, AAAA, MX, NS, TXT, and CNAME records for a domain.",
+    path: "/dns"
   }
 ];
 

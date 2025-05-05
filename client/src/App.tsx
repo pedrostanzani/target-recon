@@ -3,6 +3,7 @@ import { Home } from './pages/Home';
 import { PortScanner } from './pages/PortScanner';
 import { Wappalyzer } from './pages/Wappalyzer';
 import { Whois } from './pages/Whois';
+import { DNS } from './pages/DNS';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="/port-scanner" element={<PortScanner />} />
             <Route path="/wappalyzer" element={<Wappalyzer />} />
             <Route path="/whois" element={<Whois />} />
+            <Route path="/dns" element={<DNS />} />
           </Routes>
         </main>
       </div>

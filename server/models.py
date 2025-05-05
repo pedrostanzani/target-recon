@@ -64,3 +64,14 @@ class WhoisRecord(BaseModel):
     state: Optional[str]
     zipcode: Optional[str]
     country: Optional[str]
+
+class DnsRequest(BaseModel):
+    domain: str
+
+class DnsRecord(BaseModel):
+    a:        List[str] = []
+    aaaa:     List[str] = []
+    mx:       List[str] = []
+    ns:       List[str] = []
+    txt:      List[str] = []
+    cname:    List[str] = []

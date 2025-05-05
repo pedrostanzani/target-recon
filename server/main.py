@@ -2,15 +2,17 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
-from models import PortResult, ScanRequest, AnalyzeResult, AnalyzeRequest, WhoisRequest, WhoisRecord
+from models import PortResult, ScanRequest, AnalyzeResult, AnalyzeRequest, WhoisRequest, WhoisRecord, DnsRequest, DnsRecord
 from tools.PortScanner import PortScanner
 from tools.Wappalyzer import Wappalyzer
 from tools.WHOIS import WhoisTool
+from tools.DNS import DnsTool
 
 app = FastAPI()
 scanner = PortScanner()
 analyzer = Wappalyzer()
 whois_tool = WhoisTool()
+dns_tool = DnsTool()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -61,6 +63,20 @@ def whois_lookup(request: WhoisRequest):
         # unexpected errors
         raise HTTPException(status_code=500, detail="Internal WHOIS error")
 
+@app.post("/dns", response_model=DnsRecord)
+def dns_enumeration(request: DnsRequest):
+    """
+    DNS enumeration endpoint.
+    Client sends { "domain": "example.com" }
+    """
+    try:
+        return dns_tool.enumerate(request.domain)
+    except ValueError as ve:
+        # bad domain / NXDOMAIN
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception:
+        # anything else (resolver timeout, etc.)
+        raise HTTPException(status_code=500, detail="Internal DNS enumeration error")
 
 if __name__ == "__main__":
     import uvicorn
