@@ -4,6 +4,7 @@ import { PortScanner } from './pages/PortScanner';
 import { Wappalyzer } from './pages/Wappalyzer';
 import { Whois } from './pages/Whois';
 import { DNS } from './pages/DNS';
+import { SubdomainScanner } from './pages/SubdomainScanner';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="/wappalyzer" element={<Wappalyzer />} />
             <Route path="/whois" element={<Whois />} />
             <Route path="/dns" element={<DNS />} />
+            <Route path="/subdomain-scanner" element={<SubdomainScanner />} />
           </Routes>
         </main>
       </div>

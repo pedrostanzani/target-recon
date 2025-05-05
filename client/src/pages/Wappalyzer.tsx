@@ -27,7 +27,7 @@ interface AnalyzeResult {
 
 // Define the form schema with Zod
 const formSchema = z.object({
-  url: z.string().min(1, "URL is required").url("Invalid URL format"),
+  url: z.string().min(1, "URL is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;

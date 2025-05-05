@@ -15,13 +15,8 @@ import {
 } from "@/components/ui/form";
 
 // Define interface matching backend response
-interface DnsRecord {
-  a: string[];
-  aaaa: string[];
-  mx: string[];
-  ns: string[];
-  txt: string[];
-  cname: string[];
+interface SubdomainResult {
+  subdomains: string[];
 }
 
 // Define the form schema with Zod
@@ -31,9 +26,9 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function DNS() {
+export function SubdomainScanner() {
   const [loading, setLoading] = useState<boolean>(false);
-  const [result, setResult] = useState<DnsRecord | null>(null);
+  const [result, setResult] = useState<SubdomainResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -48,7 +43,7 @@ export function DNS() {
     setError(null);
     setResult(null);
     try {
-      const response = await fetch('http://localhost:8000/dns', {
+      const response = await fetch('http://localhost:8000/subdomains', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -57,9 +52,9 @@ export function DNS() {
       });
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || 'DNS lookup failed');
+        throw new Error(text || 'Subdomain scan failed');
       }
-      const data: DnsRecord = await response.json();
+      const data: SubdomainResult = await response.json();
       setResult(data);
     } catch (e: any) {
       setError(e.message);
@@ -79,7 +74,7 @@ export function DNS() {
                 name="domain"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Domain</FormLabel>
+                    <FormLabel>URL</FormLabel>
                     <div className="flex gap-2">
                       <FormControl>
                         <Input
@@ -90,9 +85,9 @@ export function DNS() {
                       <Button
                         variant="outline"
                         type="button"
-                        onClick={() => form.setValue("domain", "google.com")}
+                        onClick={() => form.setValue("domain", "uol.com.br")}
                       >
-                        Example
+                        Example (UOL)
                       </Button>
                     </div>
                     <FormMessage />
@@ -104,7 +99,7 @@ export function DNS() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? 'Looking up...' : 'Lookup DNS Records'}
+                {loading ? 'Scanning...' : 'Scan Subdomains'}
               </Button>
               {error && <p className="text-red-600">Error: {error}</p>}
             </form>
@@ -112,28 +107,31 @@ export function DNS() {
         </CardContent>
       </Card>
 
-      {result && (
+      {result ? (
         <Card className="max-w-4xl mx-auto">
           <CardContent>
-            <div className="space-y-6">
-              {Object.entries(result).map(([recordType, records]) => (
-                <div key={recordType} className="space-y-2">
-                  <h3 className="text-lg font-semibold capitalize">{recordType} Records</h3>
-                  {records.length > 0 ? (
-                    <div className="bg-gray-50 p-4 rounded-md">
-                      {records.map((record: string, index: number) => (
-                        <div key={index} className="text-sm font-mono">{record}</div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-sm">No {recordType.toUpperCase()} records found</p>
-                  )}
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Subdomain</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {result.subdomains.map((subdomain, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-2 text-sm">{subdomain}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {result.subdomains.length === 0 && (
+                <p className="text-center text-gray-500 py-4">No subdomains found.</p>
+              )}
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 } 

@@ -26,6 +26,12 @@ const tools = [
     title: "DNS Lookup",
     description: "Query DNS records including A, AAAA, MX, NS, TXT, and CNAME records for a domain.",
     path: "/dns"
+  },
+  {
+    id: "subdomain-scanner",
+    title: "Subdomain Scanner",
+    description: "Discover subdomains of a target domain by scanning common subdomain prefixes.",
+    path: "/subdomain-scanner"
   }
 ];
 

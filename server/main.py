@@ -2,17 +2,20 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
-from models import PortResult, ScanRequest, AnalyzeResult, AnalyzeRequest, WhoisRequest, WhoisRecord, DnsRequest, DnsRecord
+from models import PortResult, ScanRequest, AnalyzeResult, AnalyzeRequest, WhoisRequest, WhoisRecord, DnsRequest, DnsRecord, SubdomainRequest, SubdomainResult  
 from tools.PortScanner import PortScanner
 from tools.Wappalyzer import Wappalyzer
 from tools.WHOIS import WhoisTool
 from tools.DNS import DnsTool
+from tools.SubdomainScanner import SubdomainTool
 
 app = FastAPI()
 scanner = PortScanner()
 analyzer = Wappalyzer()
 whois_tool = WhoisTool()
 dns_tool = DnsTool()
+subdomain_tool = SubdomainTool()
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -77,6 +80,20 @@ def dns_enumeration(request: DnsRequest):
     except Exception:
         # anything else (resolver timeout, etc.)
         raise HTTPException(status_code=500, detail="Internal DNS enumeration error")
+
+@app.post("/subdomains", response_model=SubdomainResult)
+def subdomain_scan(request: SubdomainRequest):
+    """
+    Scan a fixed list of 50 common subdomains under `request.domain`.
+    Returns only those that resolve to an A record.
+    """
+    try:
+        subs = subdomain_tool.scan(request.domain)
+        return SubdomainResult(subdomains=subs)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal subdomain scan error")
 
 if __name__ == "__main__":
     import uvicorn

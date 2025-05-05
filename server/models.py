@@ -75,3 +75,9 @@ class DnsRecord(BaseModel):
     ns:       List[str] = []
     txt:      List[str] = []
     cname:    List[str] = []
+
+class SubdomainRequest(BaseModel):
+    domain: str
+
+class SubdomainResult(BaseModel):
+    subdomains: List[str]
