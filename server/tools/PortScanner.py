@@ -2,6 +2,7 @@ import socket
 from ipaddress import ip_network
 import errno
 from typing import List, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from models import PortResult
 
@@ -92,25 +93,29 @@ class PortScanner:
             return PortResult(ip=ip, port=port, protocol="udp", status="error", error_message=str(e))
 
     def scan(self, target: str, start_port: int, end_port: int,
-             protocol: str, print_closed: bool, print_filtered: bool) -> List[PortResult]:
+             protocol: str, print_closed: bool, print_filtered: bool,
+             max_workers: int = 100) -> List[PortResult]:
         proto = protocol.lower()
         if proto not in ('tcp', 'udp'):
             raise ValueError("Protocol inválido; use 'tcp' ou 'udp'.")
-        # hosts expansion
-        if '/' in target:
-            network = ip_network(target, strict=False)
-            hosts = [str(h) for h in network.hosts()]
-        else:
-            hosts = [target]
+
+        # expand hosts as before…
+        hosts = ([str(h) for h in ip_network(target, strict=False).hosts()]
+                 if '/' in target
+                 else [target])
+
         results: List[PortResult] = []
-        for ip in hosts:
-            for port in range(start_port, end_port + 1):
-                if proto == 'tcp':
-                    res = self._scan_tcp(
-                        ip, port, print_closed, print_filtered)
-                else:
-                    res = self._scan_udp(
-                        ip, port, print_closed, print_filtered)
+        scan_fn = self._scan_tcp if proto == 'tcp' else self._scan_udp
+
+        # spin up a pool of worker threads
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {
+                pool.submit(scan_fn, ip, port, print_closed, print_filtered): (ip, port)
+                for ip in hosts
+                for port in range(start_port, end_port + 1)
+            }
+            for future in as_completed(futures):
+                res = future.result()
                 if res:
                     results.append(res)
         return results
