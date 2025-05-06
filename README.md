@@ -88,7 +88,7 @@ O servidor inclui várias ferramentas especializadas para análise de alvos:
 
 1. Clone o repositório:
 ```bash
-git clone [URL_DO_REPOSITÓRIO]
+git clone https://github.com/pedrostanzani/target-recon
 cd target-recon
 ```
 
